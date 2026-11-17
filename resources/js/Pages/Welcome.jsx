@@ -1,59 +1,27 @@
 import { Head, usePage } from '@inertiajs/react';
+import { Button } from '@/Components/ui';
 
-const DAYS = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
-
-/**
- * Página de prueba del stack: confirma que Inertia + React + Tailwind
- * funcionan y que los colores de marca blanca se aplican.
- */
-export default function Welcome({ attendedDays = [] }) {
-    const { brand } = usePage().props;
+/** Landing del dominio central (la de cada gimnasio redirige a su login). */
+export default function Welcome() {
+    const { brand, auth } = usePage().props;
 
     return (
         <>
-            <Head title="Inicio" />
-
-            <header className="bg-secondary text-on-secondary">
-                <div className="mx-auto flex max-w-md items-center gap-3 px-4 py-4">
-                    {brand.logoUrl ? (
-                        <img src={brand.logoUrl} alt="" className="size-10 rounded-full object-cover" />
-                    ) : (
-                        <div className="grid size-10 place-items-center rounded-full bg-primary font-bold text-on-primary">
-                            {brand.name.charAt(0)}
-                        </div>
-                    )}
-                    <h1 className="text-lg font-semibold">{brand.name}</h1>
-                </div>
-            </header>
-
-            <main className="mx-auto max-w-md space-y-4 px-4 py-6">
-                <section className="rounded-2xl bg-white p-5 shadow-sm">
-                    <h2 className="text-base font-semibold">Tu semana</h2>
-                    <ul className="mt-4 grid grid-cols-7 gap-2" aria-label="Asistencia de la semana">
-                        {DAYS.map((day, i) => {
-                            const attended = attendedDays.includes(i);
-                            return (
-                                <li
-                                    key={day}
-                                    className={`grid aspect-square place-items-center rounded-xl text-sm font-semibold ${
-                                        attended ? 'bg-primary text-on-primary' : 'bg-slate-100 text-slate-400'
-                                    }`}
-                                    aria-label={`${day}: ${attended ? 'asististe' : 'sin asistencia'}`}
-                                >
-                                    {day}
-                                </li>
-                            );
-                        })}
-                    </ul>
-                </section>
-
-                <button
-                    type="button"
-                    className="w-full rounded-2xl bg-primary px-6 py-4 text-lg font-semibold text-on-primary shadow-sm active:scale-[0.98]"
-                >
-                    Ver mi credencial QR
-                </button>
-            </main>
+            <Head title="Plataforma para gimnasios" />
+            <div className="flex min-h-dvh flex-col bg-secondary text-on-secondary">
+                <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-5">
+                    <span className="text-xl font-bold">{brand.name}</span>
+                    <Button href={auth.user ? '/inicio' : '/login'} variant="secondary" size="sm">
+                        {auth.user ? 'Ir al panel' : 'Iniciar sesión'}
+                    </Button>
+                </header>
+                <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center px-6 pb-20">
+                    <h1 className="max-w-2xl text-4xl font-bold tracking-tight sm:text-5xl">Tu gimnasio, con tu marca, en el celular de tus socios.</h1>
+                    <p className="mt-4 max-w-xl text-lg opacity-80">
+                        Credencial QR, rutinas con video, rachas de asistencia y seguimiento físico. Todo con el logotipo y los colores de tu gimnasio.
+                    </p>
+                </main>
+            </div>
         </>
     );
 }

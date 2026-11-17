@@ -7,7 +7,7 @@ use Tests\TestCase;
 
 class ExampleTest extends TestCase
 {
-    public function test_home_renders_inertia_page_with_brand(): void
+    public function test_central_landing_renders_with_default_brand(): void
     {
         $this->withoutVite();
 
@@ -18,7 +18,6 @@ class ExampleTest extends TestCase
                 ->component('Welcome')
                 ->has('brand.name')
                 ->has('brand.primary')
-                ->where('attendedDays', [0, 2, 4])
             );
     }
 }

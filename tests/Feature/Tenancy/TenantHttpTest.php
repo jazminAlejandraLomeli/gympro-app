@@ -32,6 +32,7 @@ class TenantHttpTest extends TestCase
 
         // Rutas solo para la prueba
         Route::middleware('web')->get('/_test/users/{user}', fn (User $user) => $user->name);
+        Route::middleware('web')->get('/_test/me', fn () => ['id' => auth()->id()]);
         Route::middleware(['web', 'role:gym_admin'])->get('/_test/admin', fn () => 'ok');
     }
 
@@ -67,12 +68,12 @@ class TenantHttpTest extends TestCase
 
     public function test_each_subdomain_gets_its_own_brand(): void
     {
-        $this->get($this->url('irondemo'))
+        $this->get($this->url('irondemo', '/login'))
             ->assertOk()
             ->assertSee('--brand-primary: #facc15', false)
             ->assertInertia(fn (Assert $page) => $page->where('brand.primary', '#facc15'));
 
-        $this->get($this->url('titan'))
+        $this->get($this->url('titan', '/login'))
             ->assertSee('--brand-primary: #dc2626', false);
     }
 
@@ -81,7 +82,7 @@ class TenantHttpTest extends TestCase
         $default = config('gympro.default_brand.primary_color');
 
         $this->get($this->url(null))->assertInertia(fn (Assert $p) => $p->where('brand.primary', $default));
-        $this->get($this->url('www'))->assertInertia(fn (Assert $p) => $p->where('brand.primary', $default));
+        $this->get($this->url('www', '/login'))->assertInertia(fn (Assert $p) => $p->where('brand.primary', $default));
     }
 
     public function test_unknown_or_invalid_subdomain_is_404(): void
@@ -99,22 +100,20 @@ class TenantHttpTest extends TestCase
 
     public function test_brand_cache_is_invalidated_when_settings_change(): void
     {
-        $this->get($this->url('irondemo'))->assertSee('#facc15', false);
+        $this->get($this->url('irondemo', '/login'))->assertSee('#facc15', false);
 
         $this->iron->settings->update(['primary_color' => '#22c55e']);
 
-        $this->get($this->url('irondemo'))->assertSee('--brand-primary: #22c55e', false);
+        $this->get($this->url('irondemo', '/login'))->assertSee('--brand-primary: #22c55e', false);
     }
 
     public function test_session_of_one_gym_is_not_valid_on_another(): void
     {
         $member = $this->userIn($this->iron);
 
-        $this->loginAs($member)->get($this->url('irondemo'))
-            ->assertInertia(fn (Assert $p) => $p->where('auth.user.id', $member->id));
+        $this->loginAs($member)->get($this->url('irondemo', '/_test/me'))->assertExactJson(['id' => $member->id]);
 
-        $this->loginAs($member)->get($this->url('titan'))
-            ->assertInertia(fn (Assert $p) => $p->where('auth.user', null));
+        $this->loginAs($member)->get($this->url('titan', '/_test/me'))->assertExactJson(['id' => null]);
     }
 
     public function test_route_model_binding_blocks_other_gyms_records(): void

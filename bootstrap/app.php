@@ -1,6 +1,8 @@
 <?php
 
-use App\Http\Middleware\EnableSuperAdminBypass;
+use App\Http\Middleware\BindSessionToTenant;
+use App\Http\Middleware\EnsureCentral;
+use App\Http\Middleware\EnsureTenant;
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\ResolveTenant;
@@ -22,20 +24,25 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(prepend: [ResolveTenant::class]);
 
         $middleware->web(append: [
-            EnableSuperAdminBypass::class,
+            BindSessionToTenant::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);
 
-        // El bypass del super_admin debe aplicar antes del route model binding
+        // Limpia sesiones ajenas y activa el bypass del super_admin antes del route model binding
         $middleware->prependToPriorityList(
             before: SubstituteBindings::class,
-            prepend: EnableSuperAdminBypass::class,
+            prepend: BindSessionToTenant::class,
         );
 
         $middleware->alias([
             'role' => EnsureUserHasRole::class,
+            'tenant' => EnsureTenant::class,
+            'central' => EnsureCentral::class,
         ]);
+
+        $middleware->redirectGuestsTo(fn () => route('login'));
+        $middleware->redirectUsersTo(fn () => route('home'));
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

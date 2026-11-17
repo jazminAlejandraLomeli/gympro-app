@@ -14,6 +14,10 @@ use RuntimeException;
  * Datos de DESARROLLO: dos gimnasios con marcas distintas para probar
  * el aislamiento y la marca blanca. Contraseña de todos: "password".
  *
+ * Cada módulo agrega sus datos con una clase en Database\Seeders\Demo
+ * que implementa seedGym(Gym $gym) (corre dentro del gimnasio) y,
+ * opcionalmente, seedCentral() (datos del SaaS).
+ *
  *   http://localhost:8000            → sitio central (super_admin)
  *   http://irondemo.localhost:8000   → Iron Demo (amarillo / morado)
  *   http://titan.localhost:8000      → Titan Fit (rojo / gris)
@@ -44,7 +48,33 @@ class DatabaseSeeder extends Seeder
         foreach ([$iron, $titan] as $gym) {
             $this->seedStaffAndMembers($gym, $tenant);
         }
+
+        foreach (self::MODULE_SEEDERS as $class) {
+            if (! class_exists($class)) {
+                continue;
+            }
+            $seeder = app($class);
+
+            if (method_exists($seeder, 'seedCentral')) {
+                $seeder->seedCentral();
+            }
+            if (method_exists($seeder, 'seedGym')) {
+                foreach ([$iron, $titan] as $gym) {
+                    $tenant->runAs($gym, fn () => $seeder->seedGym($gym));
+                }
+            }
+        }
     }
+
+    /** En orden: membresías primero (otros módulos usan socios con QR). */
+    private const MODULE_SEEDERS = [
+        Demo\MembershipDemoSeeder::class,   // Módulo A
+        Demo\RoutineDemoSeeder::class,      // Módulo B
+        Demo\ProgressDemoSeeder::class,     // Módulos C y D
+        Demo\AnnouncementDemoSeeder::class, // Módulo E
+        Demo\InventoryDemoSeeder::class,    // Módulo F
+        Demo\SaasDemoSeeder::class,         // Módulo 0
+    ];
 
     private function seedStaffAndMembers(Gym $gym, TenantContext $tenant): void
     {

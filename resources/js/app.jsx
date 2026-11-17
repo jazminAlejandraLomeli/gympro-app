@@ -3,6 +3,10 @@ import '../css/app.css';
 import { createInertiaApp } from '@inertiajs/react';
 import { createRoot } from 'react-dom/client';
 
+// Carga diferida: cada página es su propio archivo JS (el socio no
+// descarga el código del panel del super_admin).
+const pages = import.meta.glob('./Pages/**/*.jsx');
+
 createInertiaApp({
     // "Rutina · Mi Gym" — el nombre lo pone la marca del gimnasio
     title: (title, page) => {
@@ -10,11 +14,10 @@ createInertiaApp({
         return title ? `${title} · ${brandName}` : brandName;
     },
 
-    resolve: (name) => {
-        const pages = import.meta.glob('./Pages/**/*.jsx', { eager: true });
-        const page = pages[`./Pages/${name}.jsx`];
-        if (!page) throw new Error(`Página Inertia no encontrada: ${name}`);
-        return page;
+    resolve: async (name) => {
+        const load = pages[`./Pages/${name}.jsx`];
+        if (!load) throw new Error(`Página Inertia no encontrada: ${name}`);
+        return load();
     },
 
     setup({ el, App, props }) {
