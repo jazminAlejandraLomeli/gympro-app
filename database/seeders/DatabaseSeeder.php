@@ -40,6 +40,9 @@ class DatabaseSeeder extends Seeder
             ['name' => 'Admin Iron', 'email' => 'admin@irondemo.test', 'password' => 'password'],
         );
 
+
+
+
         $titan = $createGym->handle(
             ['name' => 'Titan Fit', 'slug' => 'titan', 'primary_color' => '#dc2626', 'secondary_color' => '#111827', 'referred_by_gym_id' => $iron->id],
             ['name' => 'Admin Titan', 'email' => 'admin@titan.test', 'password' => 'password'],
@@ -48,6 +51,9 @@ class DatabaseSeeder extends Seeder
         foreach ([$iron, $titan] as $gym) {
             $this->seedStaffAndMembers($gym, $tenant);
         }
+
+
+        
 
         foreach (self::MODULE_SEEDERS as $class) {
             if (! class_exists($class)) {
