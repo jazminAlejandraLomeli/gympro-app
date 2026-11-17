@@ -78,6 +78,31 @@ Cada gimnasio opera bajo su propia identidad visual (logotipo, colores corporati
 ```bash
 git clone https://github.com/tu-usuario/tu-repositorio-gym-saas.git
 cd tu-repositorio-gym-saas
+```
+2. **Instalar dependencias de PHP y Node.js:**
 
-1. **Instalar dependencias de PHP y Node.js:**
+```bash
+composer install
+npm install
+ ```
  
+3. **Configurar variables de entorno:**
+
+```bash
+cp .env.example .env
+php artisan key:generate
+ ```
+
+4. **Ejecutar migraciones y seeders:**
+
+```bash
+php artisan migrate --seed
+ ```
+
+5. **Iniciar servicios de desarrollo (Servidor, Vite y Workers de Cola):**
+
+```bash
+php artisan serve
+npm run dev
+php artisan queue:work redis
+ ```
