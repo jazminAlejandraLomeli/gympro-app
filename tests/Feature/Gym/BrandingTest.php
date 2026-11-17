@@ -42,7 +42,8 @@ class BrandingTest extends TestCase
 
         $settings = $this->gym->settings()->first();
         $this->assertSame('Iron Nuevo', $settings->brand_name);
-        $this->assertStringContainsString("gyms/{$this->gym->id}/branding/", $settings->logo_url);
+        // Relativa: funciona en el subdominio de cada gimnasio y en cualquier puerto
+        $this->assertStringStartsWith("/storage/gyms/{$this->gym->id}/branding/", $settings->logo_url);
 
         // La marca nueva se ve de inmediato (caché invalidada)
         $this->actingAs($admin)->get($this->url('/panel'))->assertSee('--brand-primary: #22c55e', false);

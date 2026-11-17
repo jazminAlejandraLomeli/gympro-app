@@ -32,7 +32,7 @@ class BrandingController extends Controller
         $settings->fill($request->safe()->only(['brand_name', 'primary_color', 'secondary_color']));
 
         if ($request->boolean('remove_logo') || $request->hasFile('logo')) {
-            $this->deleteStoredLogo($settings->logo_url);
+            $this->deleteStoredLogo($settings->logo_url, $gym->id);
             $settings->logo_url = null;
         }
 
@@ -47,12 +47,25 @@ class BrandingController extends Controller
         return back()->with('success', 'Marca actualizada.');
     }
 
-    private function deleteStoredLogo(?string $url): void
+    /**
+     * Borra el archivo del logo anterior. Acepta la URL relativa actual
+     * (/storage/...) y las absolutas guardadas antes (http://host/storage/...).
+     */
+    private function deleteStoredLogo(?string $url, int $gymId): void
     {
-        $prefix = Storage::disk('public')->url('');
+        if (! $url) {
+            return;
+        }
 
-        if ($url && str_starts_with($url, $prefix)) {
-            Storage::disk('public')->delete(substr($url, strlen($prefix)));
+        $path = parse_url($url, PHP_URL_PATH) ?? '';
+        $prefix = rtrim(parse_url(Storage::disk('public')->url(''), PHP_URL_PATH) ?? '/storage', '/').'/';
+
+        if (str_starts_with($path, $prefix)) {
+            $relative = substr($path, strlen($prefix));
+            // Solo dentro de la carpeta de ESTE gimnasio (nunca ../)
+            if (! str_contains($relative, '..') && str_starts_with($relative, "gyms/{$gymId}/")) {
+                Storage::disk('public')->delete($relative);
+            }
         }
     }
 }

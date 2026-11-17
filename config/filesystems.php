@@ -41,7 +41,10 @@ return [
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
+            // Relativa a propósito: cada gimnasio vive en su propio subdominio,
+            // así que logos y clips se sirven desde el mismo host que la página.
+            // En producción puede apuntar a un CDN con PUBLIC_STORAGE_URL.
+            'url' => rtrim(env('PUBLIC_STORAGE_URL', '/storage'), '/'),
             'visibility' => 'public',
             'throw' => false,
             'report' => false,
