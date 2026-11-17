@@ -1,7 +1,7 @@
 # gympro-app
 Plataforma para gestion general de un GYM.
 
-SaaS multi-tenant marca blanca en Laravel 13 (PHP 8.2+).
+SaaS multi-tenant marca blanca en Laravel 13 puro, sin starter kit (requiere PHP 8.3+).
 
 ## Infraestructura
 
