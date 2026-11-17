@@ -140,6 +140,13 @@ return [
         'host' => env('MEILISEARCH_HOST', 'http://localhost:7700'),
         'key' => env('MEILISEARCH_KEY'),
         'index-settings' => [
+            // Módulo A: socios. Índice compartido por todos los gimnasios:
+            // TODA búsqueda debe llevar ->where('gym_id', $tenantId).
+            // Aplicar con: php artisan scout:sync-index-settings
+            'App\Models\Membership' => [
+                'filterableAttributes' => ['gym_id'],
+                'searchableAttributes' => ['name', 'email', 'phone'],
+            ],
             // 'users' => [
             //     'filterableAttributes' => ['id', 'name', 'email'],
             //     'embedders' => [
