@@ -1,0 +1,72 @@
+# ------------------------------------------------------------------
+# GymPro – servicios de infraestructura en contenedores
+#
+#  • Redis        → sesiones, caché (estatus QR, rachas) y colas (FFmpeg)
+#  • Meilisearch  → búsqueda instantánea vía Laravel Scout
+#
+#  La base de datos (MySQL/PostgreSQL) NO va aquí: es un servicio
+#  rentado/administrado externo. Se configura solo con DB_* en .env.
+#
+#  Uso:   docker compose up -d
+#         docker compose ps
+#         docker compose logs -f meilisearch
+# ------------------------------------------------------------------
+
+name: gympro
+
+services:
+  redis:
+    image: redis:7.4-alpine
+    container_name: gympro-redis
+    restart: unless-stopped
+    command:
+      - redis-server
+      - --requirepass
+      - ${REDIS_PASSWORD:?Define REDIS_PASSWORD en .env}
+      # AOF: si el contenedor se reinicia no se pierden jobs en cola
+      - --appendonly
+      - "yes"
+      - --appendfsync
+      - everysec
+      - --maxmemory
+      - ${REDIS_MAXMEMORY:-512mb}
+      # noeviction: Redis guarda colas y sesiones; nunca debe borrar
+      # llaves por falta de memoria (perderías jobs o sacarías socios).
+      - --maxmemory-policy
+      - noeviction
+    ports:
+      # Solo localhost: Redis jamás debe quedar expuesto a internet
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" --no-auth-warning ping | grep PONG"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.12
+    container_name: gympro-meilisearch
+    restart: unless-stopped
+    environment:
+      # "production" exige master key de 16+ caracteres y apaga el dashboard
+      MEILI_ENV: ${MEILI_ENV:-development}
+      MEILI_MASTER_KEY: ${MEILISEARCH_KEY:?Define MEILISEARCH_KEY en .env}
+      MEILI_NO_ANALYTICS: "true"
+      MEILI_LOG_LEVEL: ${MEILI_LOG_LEVEL:-INFO}
+    ports:
+      - "127.0.0.1:${MEILISEARCH_PORT:-7700}:7700"
+    volumes:
+      - meili_data:/meili_data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:7700/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  redis_data:
+  meili_data:
