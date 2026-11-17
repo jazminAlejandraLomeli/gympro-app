@@ -8,6 +8,7 @@ use Database\Factories\GymFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\Cache;
@@ -93,5 +94,23 @@ class Gym extends Model
     public function users(): HasMany
     {
         return $this->hasMany(User::class)->withoutGlobalScope(TenantScope::class);
+    }
+
+    /** Gimnasio que lo refirió (programa de referidos del SaaS). */
+    public function referrer(): BelongsTo
+    {
+        return $this->belongsTo(Gym::class, 'referred_by_gym_id');
+    }
+
+    /** Gimnasios que este refirió. */
+    public function referrals(): HasMany
+    {
+        return $this->hasMany(Gym::class, 'referred_by_gym_id');
+    }
+
+    /** Pagos de la licencia SaaS (dato central, sin filtro por gimnasio). */
+    public function saasPayments(): HasMany
+    {
+        return $this->hasMany(SaasPayment::class);
     }
 }

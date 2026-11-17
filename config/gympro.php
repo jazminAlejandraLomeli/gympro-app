@@ -44,4 +44,29 @@ return [
 
     'saas_monthly_fee' => 1800,
 
+    /*
+    |--------------------------------------------------------------------------
+    | FFmpeg (Módulo B: compresión de clips de ejercicios)
+    |--------------------------------------------------------------------------
+    */
+
+    'ffmpeg' => [
+        'binary' => env('FFMPEG_BINARY', 'ffmpeg'),
+        'ffprobe' => env('FFPROBE_BINARY', 'ffprobe'),
+        'timeout' => 120,
+        // Peso objetivo por clip (300 KB – 800 KB)
+        'max_output_bytes' => 800 * 1024,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Rachas (Módulo C)
+    |--------------------------------------------------------------------------
+    */
+
+    'streaks' => [
+        // Días mínimos de asistencia por semana (lunes a domingo)
+        'weekly_goal' => 3,
+    ],
+
 ];

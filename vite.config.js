@@ -21,6 +21,21 @@ export default defineConfig({
     ],
     resolve: {
         alias: { '@': fileURLToPath(new URL('./resources/js', import.meta.url)) },
+        dedupe: ['react', 'react-dom'],
+    },
+    // Pre-empaqueta las librerías en `npm run dev`: evita que Vite las
+    // descubra a medias y cargue dos copias de React ("Invalid hook call").
+    optimizeDeps: {
+        include: [
+            'react',
+            'react-dom',
+            'react-dom/client',
+            '@inertiajs/react',
+            'recharts',
+            'lucide-react',
+            'html5-qrcode',
+            'qrcode.react',
+        ],
     },
     server: {
         watch: {
