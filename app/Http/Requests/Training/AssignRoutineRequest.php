@@ -7,7 +7,10 @@ use App\Tenancy\TenantContext;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-/** Asigna una rutina a uno o varios socios del gimnasio activo. */
+/**
+ * Asigna una plantilla a uno o varios socios del gimnasio activo.
+ * `date` = inicio (semanal) o fecha de la sesión (un día); default hoy.
+ */
 class AssignRoutineRequest extends FormRequest
 {
     public function authorize(): bool
@@ -27,7 +30,7 @@ class AssignRoutineRequest extends FormRequest
                 'distinct',
                 Rule::exists('users', 'id')->where('gym_id', $gymId)->where('role', Role::Member->value),
             ],
-            'starts_on' => ['nullable', 'date_format:Y-m-d'],
+            'date' => ['nullable', 'date_format:Y-m-d'],
         ];
     }
 
@@ -36,8 +39,10 @@ class AssignRoutineRequest extends FormRequest
         return [
             'user_ids.required' => 'Elige al menos un socio.',
             'user_ids.min' => 'Elige al menos un socio.',
+            'user_ids.max' => 'Puedes asignar a máximo 200 socios a la vez.',
             'user_ids.*.exists' => 'Uno de los socios elegidos no pertenece a este gimnasio.',
-            'starts_on.date_format' => 'La fecha de inicio no es válida.',
+            'user_ids.*.distinct' => 'Elegiste al mismo socio dos veces.',
+            'date.date_format' => 'La fecha no es válida.',
         ];
     }
 }

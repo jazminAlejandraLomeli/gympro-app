@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * Ejercicio del catálogo del gimnasio, con un clip corto opcional.
+ * Ejercicio de la biblioteca del gimnasio, con un video de muestra opcional.
  *
  * El clip lo maneja el job CompressExerciseClip: clip_path, clip_status
  * y clip_size_bytes NO son fillable (se asignan con forceFill).
  */
-#[Fillable(['name', 'muscle_group', 'instructions'])]
+#[Fillable(['name', 'muscle_group', 'objective', 'equipment', 'difficulty', 'instructions', 'notes'])]
 class Exercise extends Model
 {
     use BelongsToGym;
@@ -41,6 +41,25 @@ class Exercise extends Model
         'abdomen' => 'Abdomen',
         'cardio' => 'Cardio',
         'cuerpo_completo' => 'Cuerpo completo',
+    ];
+
+    /** Equipo necesario (clave => etiqueta). */
+    public const EQUIPMENT = [
+        'barra' => 'Barra',
+        'mancuernas' => 'Mancuernas',
+        'maquina' => 'Máquina',
+        'polea' => 'Polea',
+        'peso_corporal' => 'Peso corporal',
+        'liga' => 'Liga',
+        'kettlebell' => 'Kettlebell',
+        'otro' => 'Otro',
+    ];
+
+    /** Nivel sugerido (clave => etiqueta). */
+    public const DIFFICULTIES = [
+        'principiante' => 'Principiante',
+        'intermedio' => 'Intermedio',
+        'avanzado' => 'Avanzado',
     ];
 
     protected $attributes = [
@@ -69,6 +88,16 @@ class Exercise extends Model
         return self::MUSCLE_GROUPS[$this->muscle_group] ?? $this->muscle_group;
     }
 
+    public function equipmentLabel(): ?string
+    {
+        return $this->equipment ? (self::EQUIPMENT[$this->equipment] ?? $this->equipment) : null;
+    }
+
+    public function difficultyLabel(): ?string
+    {
+        return $this->difficulty ? (self::DIFFICULTIES[$this->difficulty] ?? $this->difficulty) : null;
+    }
+
     /** URL pública del clip comprimido (puede existir aunque se esté procesando uno nuevo). */
     public function clipUrl(): ?string
     {
@@ -83,10 +112,25 @@ class Exercise extends Model
             'name' => $this->name,
             'muscle_group' => $this->muscle_group,
             'muscle_group_label' => $this->muscleGroupLabel(),
+            'objective' => $this->objective,
+            'equipment' => $this->equipment,
+            'equipment_label' => $this->equipmentLabel(),
+            'difficulty' => $this->difficulty,
+            'difficulty_label' => $this->difficultyLabel(),
             'instructions' => $this->instructions,
+            'notes' => $this->notes,
             'clip_url' => $this->clipUrl(),
             'clip_status' => $this->clip_status,
             'clip_size_bytes' => $this->clip_size_bytes,
         ];
+    }
+
+    /** @return list<array{value: string, label: string}> */
+    public static function options(array $map): array
+    {
+        return collect($map)
+            ->map(fn (string $label, string $value) => ['value' => $value, 'label' => $label])
+            ->values()
+            ->all();
     }
 }

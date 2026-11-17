@@ -51,8 +51,9 @@ Ver estado de los contenedores: `docker compose ps`
 | 0. Panel del SaaS: gimnasios, pagos de licencia, MRR, salud, errores | super_admin | `localhost/admin` |
 | A. Socios, membresías, pagos en mostrador, entrenadores, escáner QR | gym_admin | `/panel/socios`, `/panel/escaner` |
 | A. Credencial QR firmada | socio | `/app/credencial` |
-| B. Ejercicios con clip (FFmpeg en cola) y constructor de rutinas | gym_admin, trainer | `/panel/ejercicios`, `/panel/rutinas` |
-| B. Rutina del día | socio | `/app/rutina` |
+| B. Biblioteca de ejercicios (objetivo, equipo, notas, video con FFmpeg en cola) | gym_admin, trainer | `/panel/ejercicios` |
+| B. Rutinas de un día o semana: solicitudes de socios, plantillas e historial | gym_admin, trainer | `/panel/rutinas` |
+| B. Rutina de hoy, pedir rutina, crear la suya e historial | socio | `/app/rutina` |
 | C y D. Rachas semanales, medidas, logros y gráficas | socio / staff | `/app/progreso`, `/panel/valoraciones` |
 | E. Avisos y promociones con vigencia automática | gym_admin | `/panel/avisos` |
 | F. Inventario, movimientos y venta en mostrador | gym_admin | `/panel/inventario` |

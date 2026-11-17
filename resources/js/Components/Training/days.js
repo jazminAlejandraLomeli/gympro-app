@@ -11,6 +11,8 @@ export const DAYS = [
     { day: 7, short: 'D', name: 'Domingo' },
 ];
 
+export const TYPE_LABELS = { single: 'Un día', weekly: 'Semanal' };
+
 /** 90 → "1:30 min", 45 → "45 s". */
 export function formatRest(seconds) {
     if (seconds === null || seconds === undefined || seconds === '') return null;
@@ -30,3 +32,23 @@ export function formatBytes(bytes) {
     if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
     return `${formatNumber(bytes / (1024 * 1024))} MB`;
 }
+
+const relative = new Intl.RelativeTimeFormat('es-MX', { numeric: 'auto' });
+
+/** ISO → "hace 3 horas", "ayer". */
+export function timeAgo(iso) {
+    if (!iso) return '';
+    const seconds = Math.round((new Date(iso).getTime() - Date.now()) / 1000);
+    const steps = [
+        ['day', 86400],
+        ['hour', 3600],
+        ['minute', 60],
+    ];
+    for (const [unit, size] of steps) {
+        if (Math.abs(seconds) >= size) return relative.format(Math.round(seconds / size), unit);
+    }
+    return 'hace un momento';
+}
+
+/** Autor visto por el socio: "Creada por ti" o "Por Coach Ana". */
+export const authorLabel = (author) => (!author ? null : author.isSelf ? 'Creada por ti' : `Por ${author.name}`);

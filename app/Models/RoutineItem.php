@@ -7,8 +7,8 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-/** Un ejercicio dentro de un día de la rutina. */
-#[Fillable(['day_of_week', 'exercise_id', 'position', 'sets', 'reps', 'weight_kg', 'rest_seconds'])]
+/** Un ejercicio de la rutina (day_of_week NULL en las de un solo día). */
+#[Fillable(['day_of_week', 'exercise_id', 'position', 'sets', 'reps', 'weight_kg', 'rest_seconds', 'notes'])]
 class RoutineItem extends Model
 {
     use BelongsToGym;
