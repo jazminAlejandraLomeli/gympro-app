@@ -22,7 +22,7 @@ class ExerciseClipController extends Controller
     public function store(UploadExerciseClipRequest $request, Exercise $exercise): RedirectResponse
     {
         $file = $request->file('clip');
-        $extension = in_array($file->extension(), ['mp4', 'mov', 'qt', 'webm', 'm4v'], true) ? $file->extension() : 'mp4';
+        $extension = in_array($file->extension(), ['mp4', 'mov', 'qt', 'webm', 'm4v', 'gif'], true) ? $file->extension() : 'mp4';
 
         $rawPath = $file->storeAs(
             "gyms/{$this->tenant->id()}/clips/raw",

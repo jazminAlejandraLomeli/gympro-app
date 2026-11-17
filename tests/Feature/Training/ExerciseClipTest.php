@@ -190,6 +190,61 @@ class ExerciseClipTest extends TrainingTestCase
         $this->assertSame([], $this->transcoder->crfs);
     }
 
+    public function test_accepts_an_animated_gif_and_queues_its_conversion(): void
+    {
+        Queue::fake();
+        $trainer = $this->user($this->iron, Role::Trainer);
+        $exercise = $this->exercise($this->iron);
+
+        $this->actingAs($trainer)
+            ->post($this->url("/panel/ejercicios/{$exercise->id}/clip"), ['clip' => $this->video('sentadilla.gif', 900, 'image/gif')])
+            ->assertRedirect()->assertSessionHas('success');
+
+        $this->assertSame(Exercise::CLIP_PROCESSING, $exercise->fresh()->clip_status);
+        $raw = Storage::disk('local')->allFiles("gyms/{$this->iron->id}/clips/raw");
+        $this->assertCount(1, $raw);
+        $this->assertStringEndsWith('.gif', $raw[0]);
+        Queue::assertPushed(CompressExerciseClip::class);
+    }
+
+    public function test_real_ffmpeg_converts_an_animated_gif_to_mp4(): void
+    {
+        $binary = (new ExecutableFinder)->find((string) config('gympro.ffmpeg.binary', 'ffmpeg'));
+        if (! $binary) {
+            $this->markTestSkipped('FFmpeg no está instalado en esta máquina.');
+        }
+
+        $dir = sys_get_temp_dir().'/gympro-gif-test-'.uniqid();
+        mkdir($dir);
+        $input = "{$dir}/in.gif";
+        $output = "{$dir}/out.mp4";
+
+        // GIF animado de 3 s con medidas impares y 12 fps, como los que se bajan de internet
+        (new Process([$binary, '-nostdin', '-y', '-loglevel', 'error',
+            '-f', 'lavfi', '-i', 'testsrc=size=333x251:rate=12:duration=3', $input]))->mustRun();
+
+        try {
+            (new FfmpegClipTranscoder($binary, 120))->transcode($input, $output, 30);
+            $this->assertFileExists($output);
+            $this->assertLessThan(filesize($input), filesize($output), 'El MP4 debe pesar menos que el GIF');
+
+            $ffprobe = (new ExecutableFinder)->find((string) config('gympro.ffmpeg.ffprobe', 'ffprobe'));
+            if ($ffprobe) {
+                $probe = new Process([$ffprobe, '-v', 'error', '-show_entries', 'stream=codec_name,width,height,pix_fmt:format=duration', '-of', 'json', $output]);
+                $info = json_decode($probe->mustRun()->getOutput(), true);
+                $this->assertSame('h264', $info['streams'][0]['codec_name']);
+                $this->assertSame(0, $info['streams'][0]['width'] % 2);
+                $this->assertSame(0, $info['streams'][0]['height'] % 2);
+                $this->assertSame('yuv420p', $info['streams'][0]['pix_fmt']);
+                $this->assertEqualsWithDelta(3.0, (float) $info['format']['duration'], 0.3);
+            }
+        } finally {
+            @unlink($input);
+            @unlink($output);
+            @rmdir($dir);
+        }
+    }
+
     public function test_ffmpeg_arguments_follow_the_spec(): void
     {
         $args = (new FfmpegClipTranscoder('ffmpeg', 60))->arguments('/in.mov', '/out.mp4', 30);

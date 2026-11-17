@@ -46,12 +46,14 @@ class FfmpegClipTranscoder implements ClipTranscoder
         return [
             $this->binary,
             '-nostdin', '-hide_banner', '-loglevel', 'error', '-y',
+            // Entrada: video del celular o GIF animado (FFmpeg lee ambos).
             '-i', $inputPath,
             '-t', (string) self::MAX_SECONDS,
             '-map', '0:v:0',
             '-an', '-sn', '-dn',
             '-map_metadata', '-1',
-            '-vf', $scale.',setsar=1,format=yuv420p',
+            // fps=30: normaliza el tiempo variable de los GIF y limita los videos a 30 fps (menos peso)
+            '-vf', $scale.',setsar=1,fps=30,format=yuv420p',
             '-c:v', 'libx264',
             '-preset', 'medium',
             '-profile:v', 'main',

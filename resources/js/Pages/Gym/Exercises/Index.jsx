@@ -334,7 +334,8 @@ function VideoSection({ exercise }) {
 
 /**
  * Dos entradas: "Grabar" abre la cámara trasera del celular
- * (capture="environment"); "Subir video" deja elegir de la galería.
+ * (capture="environment"); "Subir video o GIF" deja elegir de la galería
+ * (los GIF animados se convierten a MP4 en el servidor).
  */
 function ClipUploader({ exercise }) {
     const form = useForm({ clip: null });
@@ -347,7 +348,7 @@ function ClipUploader({ exercise }) {
         setLocalError(null);
         if (!file) return;
         if (file.size > MAX_CLIP_BYTES) {
-            setLocalError('El video pesa más de 50 MB. Graba solo 3 a 5 segundos.');
+            setLocalError('El archivo pesa más de 50 MB. Graba o elige solo 3 a 5 segundos.');
             return;
         }
         form.transform(() => ({ clip: file }));
@@ -375,13 +376,13 @@ function ClipUploader({ exercise }) {
                     <input
                         ref={fileRef}
                         type="file"
-                        accept="video/mp4,video/quicktime,video/webm,video/*"
+                        accept="video/mp4,video/quicktime,video/webm,video/*,image/gif"
                         className="sr-only"
                         disabled={busy}
                         onChange={(e) => upload(e.target.files[0])}
                     />
                     <span className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-white px-3 py-2.5 text-sm font-semibold text-slate-900 ring-1 ring-slate-300">
-                        <Upload className="size-4" aria-hidden="true" /> Subir video
+                        <Upload className="size-4" aria-hidden="true" /> Subir video o GIF
                     </span>
                 </label>
             </div>
@@ -391,7 +392,7 @@ function ClipUploader({ exercise }) {
                 </div>
             )}
             {(localError || form.errors.clip) && <p className="text-sm text-red-600">{localError || form.errors.clip}</p>}
-            <p className="text-xs text-slate-500">MP4, MOV o WebM de hasta 50 MB. Se recorta a 6 segundos, sin audio.</p>
+            <p className="text-xs text-slate-500">Video (MP4, MOV, WebM) o GIF animado de hasta 50 MB. Se convierte a video ligero de máximo 6 segundos, sin audio.</p>
         </div>
     );
 }
