@@ -2,42 +2,40 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\Brand;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
 {
     /**
-     * The root template that's loaded on the first page visit.
-     *
-     * @see https://inertiajs.com/server-side-setup#root-template
+     * Layout raíz que se carga en la primera visita.
      *
      * @var string
      */
     protected $rootView = 'app';
 
-    /**
-     * Determines the current asset version.
-     *
-     * @see https://inertiajs.com/asset-versioning
-     */
     public function version(Request $request): ?string
     {
         return parent::version($request);
     }
 
     /**
-     * Define the props that are shared by default.
-     *
-     * @see https://inertiajs.com/shared-data
+     * Comparte la marca con el layout Blade (variables CSS en el
+     * primer render, sin parpadeo de colores) y con React como prop.
      *
      * @return array<string, mixed>
      */
     public function share(Request $request): array
     {
+        // TODO módulo multi-tenant: resolver la marca del gimnasio actual
+        $brand = Brand::default();
+
+        view()->share('brand', $brand);
+
         return [
             ...parent::share($request),
-            //
+            'brand' => $brand->toArray(),
         ];
     }
 }

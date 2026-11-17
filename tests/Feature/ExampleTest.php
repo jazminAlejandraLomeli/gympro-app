@@ -2,18 +2,23 @@
 
 namespace Tests\Feature;
 
-// use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class ExampleTest extends TestCase
 {
-    /**
-     * A basic test example.
-     */
-    public function test_the_application_returns_a_successful_response(): void
+    public function test_home_renders_inertia_page_with_brand(): void
     {
-        $response = $this->get('/');
+        $this->withoutVite();
 
-        $response->assertStatus(200);
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('--brand-primary', false)
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Welcome')
+                ->has('brand.name')
+                ->has('brand.primary')
+                ->where('attendedDays', [0, 2, 4])
+            );
     }
 }
