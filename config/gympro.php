@@ -4,12 +4,27 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Dominio base
+    |--------------------------------------------------------------------------
+    |
+    | Cada gimnasio vive en {slug}.{base_domain}. El dominio base solo
+    | (o un subdominio reservado) es el sitio central / super_admin.
+    | Local: "localhost" → irondemo.localhost:8000 (los navegadores
+    | resuelven *.localhost a 127.0.0.1 sin tocar /etc/hosts).
+    |
+    */
+
+    'base_domain' => env('APP_BASE_DOMAIN', 'localhost'),
+
+    'reserved_subdomains' => ['www', 'app', 'admin', 'api', 'mail', 'static', 'cdn'],
+
+    /*
+    |--------------------------------------------------------------------------
     | Marca por defecto
     |--------------------------------------------------------------------------
     |
-    | Identidad visual que se usa cuando no hay un gimnasio resuelto
-    | (landing, panel super_admin). Cuando exista el módulo multi-tenant,
-    | cada gimnasio la sobrescribe con su registro en `gym_settings`.
+    | Se usa en el dominio central y como respaldo si un gimnasio aún no
+    | tiene registro en `gym_settings`.
     |
     */
 
@@ -20,5 +35,13 @@ return [
         'primary_color' => '#16a34a',
         'secondary_color' => '#0f172a',
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Licencia SaaS
+    |--------------------------------------------------------------------------
+    */
+
+    'saas_monthly_fee' => 1800,
 
 ];

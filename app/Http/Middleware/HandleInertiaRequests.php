@@ -28,14 +28,23 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
-        // TODO módulo multi-tenant: resolver la marca del gimnasio actual
-        $brand = Brand::default();
+        $brand = Brand::current();
 
         view()->share('brand', $brand);
+
+        $user = $request->user();
 
         return [
             ...parent::share($request),
             'brand' => $brand->toArray(),
+            // Solo lo mínimo: nunca mandar el modelo completo al navegador
+            'auth' => [
+                'user' => $user ? [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'role' => $user->role->value,
+                ] : null,
+            ],
         ];
     }
 }

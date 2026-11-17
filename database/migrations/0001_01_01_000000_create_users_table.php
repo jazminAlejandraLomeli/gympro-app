@@ -13,12 +13,19 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
+            // NULL solo para super_admin (dueños del SaaS)
+            $table->foreignId('gym_id')->nullable()->constrained()->restrictOnDelete();
+            $table->string('role', 20)->default('member');
             $table->string('name');
-            $table->string('email')->unique();
+            $table->string('email');
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
             $table->timestamps();
+
+            // El mismo correo puede ser socio en dos gimnasios distintos
+            $table->unique(['gym_id', 'email']);
+            $table->index(['gym_id', 'role']);
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

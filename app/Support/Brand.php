@@ -2,11 +2,16 @@
 
 namespace App\Support;
 
+use App\Models\Gym;
+use App\Models\GymSettings;
+use App\Tenancy\TenantContext;
+use Illuminate\Support\Facades\Cache;
+
 /**
  * Identidad visual (marca blanca) que se aplica a la interfaz.
  *
- * Hoy se construye desde config('gympro.default_brand'); el módulo
- * multi-tenant la construirá desde el `gym_settings` del gimnasio actual.
+ * Con gimnasio activo sale de su `gym_settings` (cacheado en Redis en
+ * gym:{id}:brand); en el dominio central, de config('gympro.default_brand').
  */
 final class Brand
 {
@@ -17,6 +22,39 @@ final class Brand
         public readonly ?string $logoUrl = null,
         public readonly ?string $faviconUrl = null,
     ) {}
+
+    /** Segundos que vive la marca en Redis (se invalida al guardar). */
+    public const CACHE_TTL = 3600;
+
+    public static function current(): self
+    {
+        $gym = app(TenantContext::class)->gym();
+
+        return $gym ? self::forGym($gym) : self::default();
+    }
+
+    public static function forGym(Gym $gym): self
+    {
+        $data = Cache::remember(
+            GymSettings::brandCacheKey($gym->getKey()),
+            self::CACHE_TTL,
+            // Filtro explícito por gym_id: no depende del contexto actual
+            fn () => GymSettings::withoutGlobalScopes()
+                ->where('gym_id', $gym->getKey())
+                ->first()
+                ?->only(['brand_name', 'logo_url', 'favicon_url', 'primary_color', 'secondary_color']) ?? [],
+        );
+
+        $fallback = config('gympro.default_brand');
+
+        return new self(
+            name: $data['brand_name'] ?? $gym->name,
+            primary: self::sanitizeHex($data['primary_color'] ?? null, $fallback['primary_color']),
+            secondary: self::sanitizeHex($data['secondary_color'] ?? null, $fallback['secondary_color']),
+            logoUrl: self::sanitizeUrl($data['logo_url'] ?? null),
+            faviconUrl: self::sanitizeUrl($data['favicon_url'] ?? null),
+        );
+    }
 
     public static function default(): self
     {
@@ -56,6 +94,16 @@ final class Brand
     public static function sanitizeHex(?string $hex, string $fallback): string
     {
         return is_string($hex) && preg_match('/^#[0-9a-fA-F]{6}$/', $hex) ? strtolower($hex) : $fallback;
+    }
+
+    /** Solo https/http o rutas relativas al sitio (nada de javascript:, data:). */
+    public static function sanitizeUrl(?string $url): ?string
+    {
+        if (! is_string($url) || $url === '') {
+            return null;
+        }
+
+        return preg_match('#^(https?://|/(?!/))#i', $url) ? $url : null;
     }
 
     /** Variables CSS que consume Tailwind (ver resources/css/app.css). */

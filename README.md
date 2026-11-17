@@ -24,3 +24,19 @@ php artisan queue:work        # en otra terminal: procesa colas (videos, indexad
 ```
 
 Ver estado de los contenedores: `docker compose ps`
+
+## Multi-tenant (un gimnasio por subdominio)
+
+- Cada gimnasio vive en `{slug}.APP_BASE_DOMAIN`. Local: `http://irondemo.localhost:8000`.
+- Todo modelo con `gym_id` usa el trait `App\Tenancy\BelongsToGym`: filtra solo por el
+  gimnasio activo, rellena `gym_id` al crear y bloquea mover datos entre gimnasios.
+- Sin gimnasio activo (dominio central) no se ve ningún dato operativo; el `super_admin`
+  autenticado en el dominio central ve todo.
+- Llaves de Redis por gimnasio: `app(TenantContext::class)->key('member', $id, 'status')`
+  → `gym:{id}:member:{id}:status`.
+- Roles: `super_admin`, `gym_admin`, `trainer`, `member` (`App\Enums\Role`). En rutas:
+  `->middleware('role:gym_admin,trainer')`; permisos generales en `AppServiceProvider`.
+
+Datos de demo (solo desarrollo): `php artisan migrate:fresh --seed` crea Iron Demo
+(`irondemo`) y Titan Fit (`titan`). Usuarios y contraseña en `database/seeders/DatabaseSeeder.php`.
+
